@@ -4,6 +4,7 @@ import okhttp3.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 public class WalletJava {
@@ -15,7 +16,7 @@ public class WalletJava {
 
     public static void main(String[] args) throws IOException {
 //        System.out.println(getNewAddress("cccc"));
-        System.out.println(getReceivedByAddress("2NB84S5tttA9df3y5ay983bpqkXZsfwo7gs"));
+        System.out.println(listReceivedByAddress("2NB84S5tttA9df3y5ay983bpqkXZsfwo7gs"));
     }
 
     public static String getAuthorization(String user,String pass){
@@ -86,5 +87,26 @@ public class WalletJava {
         Gson gson = new Gson();
         Map<String,Object> map = gson.fromJson(response.body().string(), Map.class);
         return map.get("result");
+    }
+
+    class ResultItem{
+        String address;
+        BigDecimal amount;
+    }
+    class ResultObject {
+        List<ResultItem> result;
+        String error;
+        String id;
+    }
+    public static Object listReceivedByAddress(String address) throws IOException {
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, "{\"method\":\"listreceivedbyaddress\",\"params\":[6,false,false,\""+address+"\"]}");
+        Response response = client.newCall(builder(body)).execute();
+//        System.out.println(response.body().string());
+        Gson gson = new Gson();
+        ResultObject resultObject = gson.fromJson(response.body().string(), ResultObject.class);
+        return resultObject.result;
     }
 }

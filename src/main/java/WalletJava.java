@@ -16,7 +16,7 @@ public class WalletJava {
 
     public static void main(String[] args) throws IOException {
 //        System.out.println(getNewAddress("cccc"));
-        System.out.println(listReceivedByAddress("2NB84S5tttA9df3y5ay983bpqkXZsfwo7gs"));
+        System.out.println(getTransaction("73d7ce15e0900ab17b8d86b438dfdf0fd818f8727f5dff8ad55432a777a162d5"));
     }
 
     public static String getAuthorization(String user,String pass){
@@ -108,5 +108,68 @@ public class WalletJava {
         Gson gson = new Gson();
         ResultObject resultObject = gson.fromJson(response.body().string(), ResultObject.class);
         return resultObject.result;
+    }
+
+    //获取交易记录
+    public static Object getTransaction(String txid) throws IOException {
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, "{\"method\":\"gettransaction\",\"params\":[\""+txid+"\"]}");
+        Response response = client.newCall(builder(body)).execute();
+//        System.out.println(response.body().string());
+        Gson gson = new Gson();
+        Map resultObject = gson.fromJson(response.body().string(), Map.class);
+        return resultObject.get("result");
+    }
+    class TransactionResult{
+        Transaction result;
+    }
+    class TransactionItem{
+        String address;
+        String category;
+        double amount;
+    }
+    class Transaction{
+        List<TransactionItem> transactions;
+    }
+
+    public static List<TransactionItem> listSinceBlock(String blockhash) throws IOException {
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, "{\"method\":\"listsinceblock\",\"params\":[\""+blockhash+"\",6,true]}");
+        Response response = client.newCall(builder(body)).execute();
+//        System.out.println(response.body().string());
+        Gson gson = new Gson();
+        TransactionResult resultObject = gson.fromJson(response.body().string(), TransactionResult.class);
+        return resultObject.result.transactions;
+    }
+
+    class BlockResult{
+        long result;
+    }
+    public static long getBlockCount() throws IOException {
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, "{\"method\":\"getblockcount\"}");
+        Response response = client.newCall(builder(body)).execute();
+//        System.out.println(response.body().string());
+        Gson gson = new Gson();
+        BlockResult resultObject = gson.fromJson(response.body().string(), BlockResult.class);
+        return resultObject.result;
+    }
+
+    public static String getBlockHash(long height) throws IOException {
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, "{\"method\":\"getblockhash\",\"params\":["+height+"]}");
+        Response response = client.newCall(builder(body)).execute();
+//        System.out.println(response.body().string());
+        Gson gson = new Gson();
+        Map resultObject = gson.fromJson(response.body().string(), Map.class);
+        return (String)resultObject.get("result");
     }
 }
